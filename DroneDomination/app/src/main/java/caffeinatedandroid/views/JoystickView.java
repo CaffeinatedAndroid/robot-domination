@@ -8,14 +8,17 @@ import android.view.MotionEvent;
 import android.view.View;
 
 /**
- * Created by chris on 23/12/2016.
+ * Virtual Joystick. This bespoke joystick view is customisable, and is capable of reporting various
+ * values. Default values for a joystick movement event are angle (in degress), and distance from centre
+ * (in percentage).
+ * @author Christopher Bull
  */
-
 public class JoystickView extends View {
 
     // TODO make touchable canvas area larger than the radius of the joystick (so can touch just outside the circle and still register touch event)
     // TODO preferences for joystick deadzone (optionally adjust distance measure to exclude deadzone)
-    // TODO joystick that appears on touch (recentering on each ACTION_DOWN) - perhaps an app feature, not a View feature.
+    // TODO joystick that appears on touch (re-centering on each ACTION_DOWN) - perhaps an app feature, not a View feature.
+    // TODO add customisable tolerance value to stop small repetitive events (e.g. if touch coords don't move by x amount)
 
     public enum Type {
         Joystick,
@@ -107,10 +110,6 @@ public class JoystickView extends View {
         cachedPowerOfTwo_radius_PreferentiallyAdjusted = (float) Math.pow(radius_PreferentiallyAdjusted, 2);
     }
 
-    public void setJoystickMoveListener(JoystickMoveListener listener) {
-        this.listener = listener;
-    }
-
     @Override
     public void onSizeChanged(int w, int h, int oldw, int oldh) {
         center_x = ((float) w) / 2;
@@ -159,6 +158,8 @@ public class JoystickView extends View {
             // Report value
             listener.OnJoystickMove(
                     new JoystickMoveEvent(
+                            // Reference to this joystick instance
+                            this,
                             // Distance
                             calculateAngleDistance_AsPercent(touch_x, touch_y),
                             // Angle
@@ -182,6 +183,8 @@ public class JoystickView extends View {
                     // Report value
                     listener.OnJoystickMove(
                             new JoystickMoveEvent(
+                                    // Reference to this joystick instance
+                                    this,
                                     // Distance
                                     calculateAngleDistance_AsPercent(touch_x, touch_y),
                                     // Angle
@@ -222,5 +225,78 @@ public class JoystickView extends View {
     private float calculateAngleDistance_AsPercent(float touch_x, float touch_y) {
         double distance = Math.hypot(center_x - touch_x, center_y - touch_y);
         return Math.min(((float)distance * 100.0f) / radius, 100f); // Percentage (100% max)
+    }
+
+    ////////////////////
+    // Listener/Event //
+    ////////////////////
+
+    /**
+     * Attaches a listener object to this View, which will be notified upon each
+     * Joystick movement event.
+     * @param listener An instance of the Listener interface to attach to this View
+     */
+    public void setJoystickMoveListener(JoystickMoveListener listener) {
+        this.listener = listener;
+    }
+
+    /**
+     * Interface definition for a callback to be invoked when a Joystick view is moved.
+     */
+    public interface JoystickMoveListener {
+        /**
+         * Called when a Joystick is moved.
+         * @param event Contains information about the joystick movement event.
+         */
+        void OnJoystickMove(JoystickMoveEvent event);
+    }
+
+    /**
+     * Event object that contains information about a Joystick movement event.
+     */
+    public class JoystickMoveEvent {
+        /**
+         * A reference to the source Joystick View of this event
+         */
+        private JoystickView view;
+        private float angle;
+        private float distance;
+
+        /**
+         * Initialises the Joystick move event object.
+         * Use the get*() methods to retrieve event information.
+         * @param view The source View
+         * @param distance distance from center
+         * @param angle angle from top
+         */
+        JoystickMoveEvent(JoystickView view, float distance, float angle) {
+            this.view = view;
+            this.angle = angle;
+            this.distance = distance;
+        }
+
+        /**
+         * Gets the Joystick View from which the event originated from.
+         * @return the source Joystick View.
+         */
+        public JoystickView getSourceView() {
+            return view;
+        }
+
+        /**
+         * Retrieves the angle of the joystick in degrees; 0 is the top of the joystick.
+         * @return The angle of the joystick
+         */
+        public float getAngle() {
+            return angle;
+        }
+
+        /**
+         * Retrieves the distance of the joystick from it's centre. Value is a percentage.
+         * @return Percentage distance from the centre.
+         */
+        public float getDistance() {
+            return distance;
+        }
     }
 }

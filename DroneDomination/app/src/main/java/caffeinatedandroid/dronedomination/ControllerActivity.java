@@ -12,13 +12,12 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 
-import caffeinatedandroid.views.JoystickMoveEvent;
-import caffeinatedandroid.views.JoystickMoveListener;
 import caffeinatedandroid.views.JoystickView;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
+ * @author Christopher Bull
  */
 public class ControllerActivity extends AppCompatActivity {
     /**
@@ -135,9 +134,9 @@ public class ControllerActivity extends AppCompatActivity {
         ((FrameLayout)findViewById(R.id.controller_layout)).addView(jv, 500, 500);// view, width, height
         jv.setX(100f);
         jv.setY(screenHeight - 100f - 500);
-        jv.setJoystickMoveListener(new JoystickMoveListener() {
+        jv.setJoystickMoveListener(new JoystickView.JoystickMoveListener() {
             @Override
-            public void OnJoystickMove(JoystickMoveEvent event) {
+            public void OnJoystickMove(JoystickView.JoystickMoveEvent event) {
                 Log.d("Joystick1", "Angle: " + event.getAngle() + ", Dist: " + event.getDistance());
             }
         });
@@ -147,9 +146,9 @@ public class ControllerActivity extends AppCompatActivity {
         ((FrameLayout)findViewById(R.id.controller_layout)).addView(jv_br, 500, 500);// view, width, height
         jv_br.setX(screenWidth - 100f - 500);
         jv_br.setY(screenHeight - 100f - 500);
-        jv_br.setJoystickMoveListener(new JoystickMoveListener() {
+        jv_br.setJoystickMoveListener(new JoystickView.JoystickMoveListener() {
             @Override
-            public void OnJoystickMove(JoystickMoveEvent event) {
+            public void OnJoystickMove(JoystickView.JoystickMoveEvent event) {
                 Log.d("Joystick2", "Angle: " + event.getAngle() + ", Dist: " + event.getDistance());
             }
         });
