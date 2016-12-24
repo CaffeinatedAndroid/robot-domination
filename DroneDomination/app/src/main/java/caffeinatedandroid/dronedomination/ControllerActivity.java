@@ -6,16 +6,15 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Button;
 import android.widget.FrameLayout;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
-import caffeinatedandroid.dronedomination.views.JoystickView;
+import caffeinatedandroid.views.JoystickMoveEvent;
+import caffeinatedandroid.views.JoystickMoveListener;
+import caffeinatedandroid.views.JoystickView;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -136,12 +135,24 @@ public class ControllerActivity extends AppCompatActivity {
         ((FrameLayout)findViewById(R.id.controller_layout)).addView(jv, 500, 500);// view, width, height
         jv.setX(100f);
         jv.setY(screenHeight - 100f - 500);
+        jv.setJoystickMoveListener(new JoystickMoveListener() {
+            @Override
+            public void OnJoystickMove(JoystickMoveEvent event) {
+                Log.d("Joystick1", "Angle: " + event.getAngle() + ", Dist: " + event.getDistance());
+            }
+        });
 
         // Bottom right joystick
         JoystickView jv_br = new JoystickView(this);
         ((FrameLayout)findViewById(R.id.controller_layout)).addView(jv_br, 500, 500);// view, width, height
         jv_br.setX(screenWidth - 100f - 500);
         jv_br.setY(screenHeight - 100f - 500);
+        jv_br.setJoystickMoveListener(new JoystickMoveListener() {
+            @Override
+            public void OnJoystickMove(JoystickMoveEvent event) {
+                Log.d("Joystick2", "Angle: " + event.getAngle() + ", Dist: " + event.getDistance());
+            }
+        });
     }
 
     @Override
