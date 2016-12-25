@@ -9,21 +9,37 @@ import android.view.View;
 
 /**
  * Virtual Joystick. This bespoke joystick view is customisable, and is capable of reporting various
- * values. Default values for a joystick movement event are angle (in degress), and distance from centre
- * (in percentage).
+ * values. Default values for a joystick movement event are angle (in degress), and distance from
+ * centre (in percentage).
  * @author Christopher Bull
  */
 public class JoystickView extends View {
 
+    // TODO add runnable/thread to poll joystick touch events (if joystick pushed forward, but steady hands, no new touch events generated)
+        // TODO optionally set mode: continuous polling, or new update only (must send a finished/recentered event).
     // TODO make touchable canvas area larger than the radius of the joystick (so can touch just outside the circle and still register touch event)
     // TODO preferences for joystick deadzone (optionally adjust distance measure to exclude deadzone)
     // TODO joystick that appears on touch (re-centering on each ACTION_DOWN) - perhaps an app feature, not a View feature.
     // TODO add customisable tolerance value to stop small repetitive events (e.g. if touch coords don't move by x amount)
+    // TODO optionally paint line (canvas.drawLine) between centre and touch point.
+    // TODO add separate listener with simple foward/backward/left/right
+    // TODO optional flexible center (define center_x/y on each intial press) - fixed by default.
 
     public enum Type {
         Joystick,
         DPad,
         WASD
+    }
+
+    public enum Direction {
+        Forward,
+        ForwardRight,
+        Right,
+        BackRight,
+        Back,
+        BackLeft,
+        Left,
+        ForwardLeft,
     }
 
     ////////////////
@@ -55,10 +71,11 @@ public class JoystickView extends View {
     private boolean touching = false;
 
     // Listener
-    private JoystickMoveListener listener = null;
+    private JoystickMoveListener moveListener = null;
 
     // Preferences
     private boolean alwaysShowJoystickPos = true;
+    private boolean drawTouchLine = true;
     private boolean overlapBorderBounds = false;
     //private boolean recenterJoystickWhenTouchExternal = true; // TODO
     private boolean recenterJoystickWhenNoTouch = true;
@@ -132,7 +149,12 @@ public class JoystickView extends View {
         canvas.drawCircle(center_x, center_y, radius_WithoutBorderWidth, paintCircleBorder);
         // Joystick
         if(alwaysShowJoystickPos || touching){
+            // Joystick - circle
             canvas.drawCircle(joystickInnerX, joystickInnerY, radius_InnerJoystick, paintCircleBorder);
+            // Joystick - line
+            if(drawTouchLine) {
+                canvas.drawLine(center_x, center_y, joystickInnerX, joystickInnerY, paintCircleBorder);
+            }
         }
     }
 
@@ -156,14 +178,16 @@ public class JoystickView extends View {
                 setTouching(false);
             }
             // Report value
-            listener.OnJoystickMove(
-                    new JoystickMoveEvent(
-                            // Reference to this joystick instance
-                            this,
-                            // Distance
-                            calculateAngleDistance_AsPercent(touch_x, touch_y),
-                            // Angle
-                            calculateAngle_InDegrees(touch_x, touch_y)));
+            if (moveListener != null) {
+                moveListener.OnJoystickMove(
+                        new JoystickMoveEvent(
+                                // Reference to this joystick instance
+                                this,
+                                // Distance
+                                calculateDistance(touch_x, touch_y),
+                                // Angle
+                                calculateAngle_InDegrees(touch_x, touch_y)));
+            }
         }else{
             // Touch point is outside the border circle
             if(alwaysShowJoystickPos) {
@@ -181,14 +205,16 @@ public class JoystickView extends View {
                     setTouching(false);
                 }else{
                     // Report value
-                    listener.OnJoystickMove(
-                            new JoystickMoveEvent(
-                                    // Reference to this joystick instance
-                                    this,
-                                    // Distance
-                                    calculateAngleDistance_AsPercent(touch_x, touch_y),
-                                    // Angle
-                                    calculateAngle_InDegrees(touch_x, touch_y)));
+                    if (moveListener != null) {
+                        moveListener.OnJoystickMove(
+                                new JoystickMoveEvent(
+                                        // Reference to this joystick instance
+                                        this,
+                                        // Distance
+                                        calculateDistance(touch_x, touch_y),
+                                        // Angle
+                                        calculateAngle_InDegrees(touch_x, touch_y)));
+                    }
                 }
             }else{
                 setTouching(false);
@@ -222,9 +248,36 @@ public class JoystickView extends View {
         return angle;
     }
 
-    private float calculateAngleDistance_AsPercent(float touch_x, float touch_y) {
+    /**
+     * Calculates the distance between the touch point and the center of the Joystick. Returns value
+     * as a decimal fraction (i.e. between 0 and 1).
+     * @param touch_x Touch point X coordinate
+     * @param touch_y Touch point Y coordinate
+     * @return the distance as a fraction
+     */
+    private float calculateDistance(float touch_x, float touch_y) {
         double distance = Math.hypot(center_x - touch_x, center_y - touch_y);
-        return Math.min(((float)distance * 100.0f) / radius, 100f); // Percentage (100% max)
+        return Math.min((float)distance / radius, 1f); // Max return value: 1.0
+    }
+
+    public static Direction calculateDirection(float angle) {
+        if(angle >= 337.5 || angle <= 22.5) {
+            return Direction.Forward;
+        }else if(angle <= 67.5){
+            return Direction.ForwardRight;
+        }else if(angle <= 112.5){
+            return Direction.Right;
+        }else if(angle <= 157.5){
+            return Direction.BackRight;
+        }else if(angle <= 202.5){
+            return Direction.Back;
+        }else if(angle <= 247.5){
+            return Direction.BackLeft;
+        }else if(angle <= 292.5){
+            return Direction.Left;
+        }else{
+            return Direction.ForwardLeft;
+        }
     }
 
     ////////////////////
@@ -232,12 +285,12 @@ public class JoystickView extends View {
     ////////////////////
 
     /**
-     * Attaches a listener object to this View, which will be notified upon each
+     * Attaches a moveListener object to this View, which will be notified upon each
      * Joystick movement event.
      * @param listener An instance of the Listener interface to attach to this View
      */
     public void setJoystickMoveListener(JoystickMoveListener listener) {
-        this.listener = listener;
+        this.moveListener = listener;
     }
 
     /**
@@ -260,6 +313,7 @@ public class JoystickView extends View {
          */
         private JoystickView view;
         private float angle;
+        private Direction direction;
         private float distance;
 
         /**
@@ -289,6 +343,13 @@ public class JoystickView extends View {
          */
         public float getAngle() {
             return angle;
+        }
+
+        public Direction getDirection() {
+            if(direction == null) {
+                direction = JoystickView.calculateDirection(angle);
+            }
+            return direction;
         }
 
         /**
