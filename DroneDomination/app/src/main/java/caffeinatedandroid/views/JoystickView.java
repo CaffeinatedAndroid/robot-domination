@@ -218,7 +218,7 @@ public class JoystickView extends View implements Runnable {
         } else if(touching && moveListener != null) { // Report event straight away.
             moveListener.OnJoystickMove(new JoystickMoveEvent(
                     // Raw X/Y
-                    joystickInnerX, joystickInnerY,
+                    joystickInnerX, joystickInnerY, center_x, center_y,
                     // Distance
                     calculateDistance_AsDecimalFraction(joystickInnerX, joystickInnerY, center_x, center_y, radius),
                     // Angle
@@ -270,7 +270,7 @@ public class JoystickView extends View implements Runnable {
                         } else {
                             moveListener.OnJoystickMove(moveEvent_cached = new JoystickMoveEvent(
                                     // Raw X/Y
-                                    touch_x_cached, touch_y_cached,
+                                    touch_x_cached, touch_y_cached, center_x_cached, center_y_cached,
                                     // Distance
                                     calculateDistance_AsDecimalFraction(
                                             touch_x_cached,
@@ -306,6 +306,13 @@ public class JoystickView extends View implements Runnable {
     //////////////////////
     // Calculate Output //
     //////////////////////
+
+    // Counter-clockwise angle
+    // Numeric value between -π and π
+    // Measured in radians
+    private double calculateAngle_InRads(float touch_x, float touch_y, float center_x, float center_y) {
+        return Math.atan2(touch_y - center_y, touch_x - center_x);
+    }
 
     /**
      * Calculate angle of touch point to center of joystick, in degrees (0 at top of circle)
@@ -405,7 +412,10 @@ public class JoystickView extends View implements Runnable {
     public class JoystickMoveEvent {
         public final float touchX;
         public final float touchY;
+        private final float centerX;
+        private final float centerY;
         private final float angle;
+        private float angle_radians = Float.MAX_VALUE;
         private Direction direction;
         private final float distance;
 
@@ -415,9 +425,11 @@ public class JoystickView extends View implements Runnable {
          * @param distance distance from center
          * @param angle angle from top
          */
-        JoystickMoveEvent(float touchX, float touchY, float distance, float angle) {
+        JoystickMoveEvent(float touchX, float touchY, float centerX, float centerY, float distance, float angle) {
             this.touchX = touchX;
             this.touchY = touchY;
+            this.centerX = centerX;
+            this.centerY = centerY;
             this.angle = angle;
             this.distance = distance;
         }
@@ -428,6 +440,13 @@ public class JoystickView extends View implements Runnable {
          */
         public float getAngle() {
             return angle;
+        }
+
+        public float getAngle_Radians() {
+            if(angle_radians == Float.MAX_VALUE) {
+                angle_radians = (float) calculateAngle_InRads(touchX, touchY, centerX, centerY);
+            }
+            return angle_radians;
         }
 
         /**

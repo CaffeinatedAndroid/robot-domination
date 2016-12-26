@@ -1,15 +1,11 @@
 package caffeinatedandroid.dronedomination;
 
 import android.annotation.SuppressLint;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.Point;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
@@ -126,7 +122,6 @@ public class ControllerActivity extends AppCompatActivity {
         int screenHeight = size.y;
 
         // Init custom Joystick controls
-        float x = 0f;
         final TestCanvasView canvasView = new TestCanvasView(this);
         ((FrameLayout)findViewById(R.id.controller_layout)).addView(canvasView, screenWidth, 1850);// view, width, height
         // Bottom left joystick
@@ -137,7 +132,7 @@ public class ControllerActivity extends AppCompatActivity {
         jv.setJoystickMoveListener(new JoystickView.JoystickMoveListener() {
             @Override
             public void OnJoystickMove(JoystickView.JoystickMoveEvent event) {
-                switch (event.getDirection()) {
+                /*switch (event.getDirection()) {
                     case Forward:
                         canvasView.moveUp(event.getDistance());
                         break;
@@ -166,7 +161,8 @@ public class ControllerActivity extends AppCompatActivity {
                     case Right:
                         canvasView.moveRight(event.getDistance());
                         break;
-                }
+                }*/
+                canvasView.moveSprite(event.getAngle_Radians(), event.getDistance());
                 canvasView.invalidate();
             }
         });
@@ -178,36 +174,7 @@ public class ControllerActivity extends AppCompatActivity {
         jv_br.setJoystickMoveListener(new JoystickView.JoystickMoveListener() {
             @Override
             public void OnJoystickMove(JoystickView.JoystickMoveEvent event) {
-                switch (event.getDirection()) {
-                    case Forward:
-                        canvasView.moveUp(event.getDistance());
-                        break;
-                    case ForwardLeft:
-                        canvasView.moveUp(event.getDistance());
-                        canvasView.moveLeft(event.getDistance());
-                        break;
-                    case ForwardRight:
-                        canvasView.moveUp(event.getDistance());
-                        canvasView.moveRight(event.getDistance());
-                        break;
-                    case Back:
-                        canvasView.moveDown(event.getDistance());
-                        break;
-                    case BackLeft:
-                        canvasView.moveDown(event.getDistance());
-                        canvasView.moveLeft(event.getDistance());
-                        break;
-                    case BackRight:
-                        canvasView.moveDown(event.getDistance());
-                        canvasView.moveRight(event.getDistance());
-                        break;
-                    case Left:
-                        canvasView.moveLeft(event.getDistance());
-                        break;
-                    case Right:
-                        canvasView.moveRight(event.getDistance());
-                        break;
-                }
+                canvasView.setAngle((float)(event.getAngle_Radians()-Math.toRadians(-90)));
                 canvasView.invalidate();
             }
         });
