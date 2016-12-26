@@ -178,8 +178,37 @@ public class ControllerActivity extends AppCompatActivity {
         jv_br.setJoystickMoveListener(new JoystickView.JoystickMoveListener() {
             @Override
             public void OnJoystickMove(JoystickView.JoystickMoveEvent event) {
+                switch (event.getDirection()) {
+                    case Forward:
+                        canvasView.moveUp(event.getDistance());
+                        break;
+                    case ForwardLeft:
+                        canvasView.moveUp(event.getDistance());
+                        canvasView.moveLeft(event.getDistance());
+                        break;
+                    case ForwardRight:
+                        canvasView.moveUp(event.getDistance());
+                        canvasView.moveRight(event.getDistance());
+                        break;
+                    case Back:
+                        canvasView.moveDown(event.getDistance());
+                        break;
+                    case BackLeft:
+                        canvasView.moveDown(event.getDistance());
+                        canvasView.moveLeft(event.getDistance());
+                        break;
+                    case BackRight:
+                        canvasView.moveDown(event.getDistance());
+                        canvasView.moveRight(event.getDistance());
+                        break;
+                    case Left:
+                        canvasView.moveLeft(event.getDistance());
+                        break;
+                    case Right:
+                        canvasView.moveRight(event.getDistance());
+                        break;
+                }
                 canvasView.invalidate();
-                //Log.d("Joystick2", "Angle: " + event.getAngle() + ", Dist: " + event.getDistance());
             }
         });
     }
